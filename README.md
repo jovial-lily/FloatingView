@@ -3,4 +3,6 @@
 
 目前未完待续，仅仅完成显示部分...
 
+效果图
 
+![image](https://github.com/jovial-lily/FloatingView/blob/master/floatingView.gif) 
