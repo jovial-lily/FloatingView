@@ -1,10 +1,13 @@
 package com.jovial.floatingview;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -17,6 +20,7 @@ import android.view.WindowManager.LayoutParams;
 
 /**
  * Created by:[ Jovial ]
+ * CSDN [ 比较喜欢丶笑 ]:http://my.csdn.net/caihongdao123?locationNum=0&fps=1
  * Created date:[ 2018/1/22 0022]
  * About Class:[ 制作一个类似ios可以左右悬浮的球 ]
  */
@@ -54,6 +58,8 @@ public class FloatingView extends AppCompatButton {
     /** 打开状态的界面布局 */
     private LayoutParams mParamsOpen;
 
+    private IOpenView mOpenView;
+
     public FloatingView(Context context){
         this(context, null , 0);
     }
@@ -67,6 +73,7 @@ public class FloatingView extends AppCompatButton {
 //        mColor = a.getColor(R.styleable.CircleView_circle_color,Color.RED);
 //        a.recycle();
         init();
+        initListener();
         initPaint();
     }
 
@@ -77,17 +84,36 @@ public class FloatingView extends AppCompatButton {
         STATE = STATE_NOMOR;
 
         mWindowManager = (WindowManager)getContext().getSystemService(Context.WINDOW_SERVICE);
-        mParams = new LayoutParams(100,100,0,0, PixelFormat.TRANSPARENT);
+        mParams = new LayoutParams();
         mParams.flags = LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_SHOW_WHEN_LOCKED;
-        mParams.width = 100;
-        mParams.height = 100;
+        mParams.type = LayoutParams.TYPE_APPLICATION;
+        mParams.format = PixelFormat.TRANSPARENT;
         mParams.gravity = Gravity.LEFT | Gravity.TOP;
-        mParams.x = 0;
-        mParams.y = 300;
+        initDefaultParams();
         mWindowManager.addView(this , mParams);
 
         screenWidth = mWindowManager.getDefaultDisplay().getWidth();
         screenHeight = mWindowManager.getDefaultDisplay().getHeight();
+
+        mOpenView = new OpenView(getContext());
+
+    }
+    private void initDefaultParams(){
+        mParams.width = 100;
+        mParams.height = 100;
+        mParams.x = 0;
+        mParams.y = 300;
+    }
+    /**
+     * 初始化弹窗监听
+     */
+    private void initListener(){
+        mOpenView.setCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                changeState2_NOMOR();
+            }
+        });
     }
 
     /**
@@ -102,6 +128,7 @@ public class FloatingView extends AppCompatButton {
      * 控件透明度增加，属于无任何状态的情况
      */
     public void changeState2_NOMOR(){
+        setState(STATE_NOMOR);
         mPaint.setAlpha(70);
         mPaint1.setAlpha(50);
         mPaint2.setAlpha(40);
@@ -114,6 +141,7 @@ public class FloatingView extends AppCompatButton {
      * 移动或者获取到焦点，透明度降低，是控件看起来颜色更亮
      */
     public void changeState2_MOVE(){
+        setState(STATE_MOVE);
         mPaint.setAlpha(90);
         mPaint1.setAlpha(70);
         mPaint2.setAlpha(60);
@@ -126,6 +154,12 @@ public class FloatingView extends AppCompatButton {
      * 当点击打开时，调用此方法重新绘制控件
      */
     private void changeSate2_OPEN(){
+        setState(STATE_OPEN);
+        invalidate();
+        mOpenView.showView();
+    }
+    public void showOpenView(){
+        changeSate2_OPEN();
     }
     /**
      * 初始化画笔
@@ -190,15 +224,12 @@ public class FloatingView extends AppCompatButton {
         super.onDraw(canvas);
         switch (STATE){
             case STATE_MOVE:
-                changeState2_MOVE();
-                drawD(canvas);
+                drawDefault(canvas);
                 break;
             case STATE_NOMOR:
-                changeState2_NOMOR();
-                drawD(canvas);
+                drawDefault(canvas);
                 break;
             case STATE_OPEN:
-                changeSate2_OPEN();
                 drawOpen(canvas);
                 break;
             default:
@@ -210,7 +241,7 @@ public class FloatingView extends AppCompatButton {
      * 绘制未点击状态的控件形态
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void drawD(Canvas canvas){
+    private void drawDefault(Canvas canvas){
         canvas.drawRoundRect(x,y,width,height,20f,20f,mRectPaint);
         canvas.drawCircle(rx,ry,c1,mPaint1);
         canvas.drawCircle(rx,ry,c2,mPaint2);
@@ -218,10 +249,11 @@ public class FloatingView extends AppCompatButton {
     }
     /**
      * 绘制点击打开状态（2）的效果
+     * 清空画布，显示dialog的方式实现的，下面这句canvas操作就是达到清空画布的效果
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void drawOpen(Canvas canvas){
-        canvas.drawRoundRect(x,y,screenWidth/2,screenHeight/2,20f,20f,mRectPaint);
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
     }
     /**
      * 计算手指停留的位置，让控件贴边
@@ -285,10 +317,16 @@ public class FloatingView extends AppCompatButton {
     }
 
     /**
+     * 添加onTouch监听后，手指按下时需要调用的方法
+     */
+    public void onActionDown(){
+        changeState2_MOVE();
+    }
+    /**
      * 添加onTouch监听后，手指抬起时需要调用的方法
      */
     public void onActionUp(float rawX , float rawY){
-        setState(FloatingView.STATE_NOMOR);
+        changeState2_NOMOR();
         //计算控件距离上左下右边框的距离，让其贴边
         cal(rawX , rawY);
         updateViewLayout();
@@ -299,5 +337,11 @@ public class FloatingView extends AppCompatButton {
     public void onActionMove(float rawX , float rawY){
         setParamsXY((int)rawX , (int)rawY);
         updateViewLayout();
+    }
+
+    @Override
+    protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
+        super.onFocusChanged(focused, direction, previouslyFocusedRect);
+//        onActionUp(mParams.x , mParams.y);
     }
 }
