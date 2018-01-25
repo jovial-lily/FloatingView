@@ -10,7 +10,8 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class FloatingViewActivity extends AppCompatActivity implements View.OnTouchListener{
+public class FloatingViewActivity extends AppCompatActivity
+        implements View.OnTouchListener , View.OnClickListener{
 
     private FloatingView mButton;
     @Override
@@ -31,6 +32,7 @@ public class FloatingViewActivity extends AppCompatActivity implements View.OnTo
 
         mButton = new FloatingView(this);
         mButton.setOnTouchListener(this);
+        mButton.setOnClickListener(this);
     }
 
     @Override
@@ -61,7 +63,7 @@ public class FloatingViewActivity extends AppCompatActivity implements View.OnTo
         int action = event.getAction();
         switch (action){
             case MotionEvent.ACTION_DOWN:
-                mButton.setState(FloatingView.STATE_MOVE);
+                mButton.onActionDown();
                 break;
             case MotionEvent.ACTION_MOVE:
                 mButton.onActionMove((int)rawX , (int)rawY);
@@ -73,5 +75,12 @@ public class FloatingViewActivity extends AppCompatActivity implements View.OnTo
                 break;
         }
         return false;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(v instanceof FloatingView){
+            mButton.showOpenView();
+        }
     }
 }
