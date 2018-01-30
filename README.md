@@ -8,5 +8,8 @@
 效果图
 
 ![image](https://github.com/jovial-lily/FloatingView/blob/master/floatingView.gif)
+
 这是open状态
+
+
 ![image](https://github.com/jovial-lily/FloatingView/blob/master/floatingPopView.gif)
