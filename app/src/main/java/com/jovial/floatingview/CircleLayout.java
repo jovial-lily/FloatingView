@@ -1,20 +1,10 @@
 package com.jovial.floatingview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
-
-/**
- * Created by:[ Jovial ]
- * Created date:[ 2018/1/25 0025]
- * About Class:[ ]
- */
-
-
-
-import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.Log;
 import android.view.View;
 
@@ -23,6 +13,7 @@ import android.view.View;
  * CSDN [ 比较喜欢丶笑 ]:http://my.csdn.net/caihongdao123?locationNum=0&fps=1
  * Created date:[ 2018/1/25 0022]
  * About Class:[ 一个可以把子控件呈圆形排列的自定义控件]
+ * eg:命名空间的问题
  */
 public class CircleLayout extends ViewGroup{
 
@@ -31,7 +22,7 @@ public class CircleLayout extends ViewGroup{
     private int radius;
 
     public CircleLayout(Context context) {
-        super(context);
+        this(context, null, 0);
     }
 
     public CircleLayout(Context context, AttributeSet attrs) {
@@ -40,19 +31,9 @@ public class CircleLayout extends ViewGroup{
 
     public CircleLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-//        TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.CircleLayout,defStyleAttr,0);
-//        int count = typedArray.getIndexCount();
-//        for (int i = 0; i<count; i++){
-//            int attNameId = typedArray.getIndex(i);
-//            switch (attNameId){
-//                case R.styleable.CircleLayout_circleRadius:
-//                    radius = typedArray.getDimensionPixelSize(attNameId,10);
-//                    break;
-//            }
-//        }
-
-//        typedArray.recycle();
-        radius = 170;
+        TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.CircleLayout);
+        radius = typedArray.getInt(R.styleable.CircleLayout_circle_radius, 100);
+        typedArray.recycle();
     }
 
     @Override
@@ -82,7 +63,11 @@ public class CircleLayout extends ViewGroup{
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-        //计算出所有childView的宽和高，（通过ViewGroup的measureChildren方法为其所有的孩子设置宽和高，此行执行完成后，childView的宽和高都已经正确的计算过了）
+        /**
+         * 计算出所有childView的宽和高
+         * （通过ViewGroup的measureChildren方法为其所有的孩子设置宽和高，
+         * 此行执行完成后，childView的宽和高都已经正确的计算过了）
+         */
         measureChildren(widthMeasureSpec, heightMeasureSpec);
 
         /**
@@ -98,9 +83,10 @@ public class CircleLayout extends ViewGroup{
         Log.d(TAG + "onMeasure", "heightContent:"+heightContent);
 
         /**
-         * 测量ViewGroup的宽高，如果为wrap_content就按照内容计算得到的宽高
+         * 设置ViewGroup的宽高，如果为wrap_content就按照内容计算得到的宽高
          */
-        setMeasuredDimension((widthMode == MeasureSpec.EXACTLY) ? widthSize : widthContent, (heightMode == MeasureSpec.EXACTLY) ? heightSize : heightContent);
+        setMeasuredDimension((widthMode == MeasureSpec.EXACTLY) ? widthSize : widthContent ,
+                (heightMode == MeasureSpec.EXACTLY) ? heightSize : heightContent);
 
     }
 
